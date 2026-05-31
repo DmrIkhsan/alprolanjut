@@ -10,10 +10,10 @@ int main (){
     int pilihan_menu;
     do {
         cout << "+==== PEMESANAN TIKET BIOSKOP ====+\n";
-        cout << "1. Lihat Film dan Kursi\n";
-        cout << "2. Pesan Tiket+\n";
-        cout << "3. Lihat Data Pesanan\n";
-        cout << "4. Cari Pesanan\n";
+        cout << "1. Lihat Film dan Kursi\n"; //menampilkan daftar film dan dena kursi bioskop (array)
+        cout << "2. Pesan Tiket+\n"; //input nama, pilih film & kursi, total harga tiket (rekursif), dll
+        cout << "3. Lihat Data Pesanan\n"; //hanya admin. menampilkan data (sorting)
+        cout << "4. Cari Pesanan\n"; //hanya admin. (searching)
         cout << "5. Keluar\n";
         cout << "Pilih menu (1-5) : ";
         cin >> pilihan_menu;
