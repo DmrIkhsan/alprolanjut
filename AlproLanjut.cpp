@@ -1,12 +1,13 @@
 #include <iostream>
 #include <fstream>
+#include <string>
 using namespace std;
 
 struct Film {
-    int idFilm;
+    string idFilm;
     string judul;
     string genre;
-    int harga;
+    string harga;
 };
 
 struct Pemesanan {
@@ -15,26 +16,76 @@ struct Pemesanan {
 };
 
 struct Bioskop{
-    Film Tayang;
-    Pemesanan Kursi[5][6];
+    string idFilmTayang;
+    Pemesanan kursi[5][6];
     string jam;
 };
 
+Bioskop ruang[3];
+Film tayang[3];
+
 void lihat_film_dan_kursi () {
-    
-}
-
-Bioskop Ruang[3];
-
-int main (){
-    ifstream file("Data/Film/Data_film.txt")
-    if (!file.is_open()) {
-        cout << "Data film tidak ada: Tanyakan manager kenapa tidak ada filem yang ditanyakan";
-        return 0;
+    cout << "\n+==== DAFTAR FILM TAYANG ===+\n";
+    for (int i = 0; i < 3; i++) {
+        cout << "Ruang " << (i + 1) << "\n";
+        cout << "ID Film : " << tayang[i].idFilm << "\n";
+        cout << "Judul   : " << tayang[i].judul << "\n";
+        cout << "Genre   : " << tayang[i].genre << "\n";
+        cout << "Harga   : Rp" << tayang[i].harga << "\n";
+        cout << "-----------------------------\n";
     }
 
-    file.close();
+    int pilihanRuang;
+    cout << "Pilih nomor Ruang (1-3) untuk melihat denah kursi: ";
+    cin >> pilihanRuang;
 
+    // Validasi input ruang
+    if (pilihanRuang >= 1 && pilihanRuang <= 3) {
+        int index = pilihanRuang - 1; // Array dimulai dari 0
+        
+        cout << "\n+==== DENAH KURSI RUANG " << pilihanRuang << " ===+\n";
+        cout << "Film: " << tayang[index].judul << "\n\n";
+        cout << "        [ LAYAR BIOSKOP ]\n\n";
+        
+        // Looping untuk menampilkan matriks 5 baris x 6 kolom
+        for (int baris = 0; baris < 5; baris++) {
+            for (int kolom = 0; kolom < 6; kolom++) {
+                // Mengecek apakah kursi sudah dipesan (nama tidak kosong)
+                if (ruang[index].kursi[baris][kolom].nama == "") {
+                    cout << "[ O ] "; // O = Kosong
+                } else {
+                    cout << "[ X ] "; // X = Terisi
+                }
+            }
+            cout << "\n"; // Pindah ke baris kursi berikutnya
+        }
+        cout << "\nKeterangan: [ O ] = Kosong, [ X ] = Terisi\n\n";
+    } else {
+        cout << "Pilihan ruang tidak valid!\n\n";
+    }
+}
+
+
+
+ 
+
+int main (){
+	for(int i = 0; i < 3; i++){
+		string namaFile = "Data/Film/Data_film"+to_string(i)+".txt";
+		ifstream file(namaFile);
+		if (!file.is_open()) {
+			cout << "Data film tidak ada: Tanyakan manager kenapa tidak ada filem yang ditanyakan";
+			return 0;
+		}
+		getline(file, tayang[i].idFilm);
+		getline(file, tayang[i].judul);
+		getline(file, tayang[i].genre);
+		getline(file, tayang[i].harga);
+		ruang[i].idFilmTayang = tayang[i].idFilm;
+
+		file.close();
+	}
+	
     int pilihan_menu;
     do {
         cout << "+==== PEMESANAN TIKET BIOSKOP ====+\n";
@@ -48,6 +99,7 @@ int main (){
 
         switch (pilihan_menu) {
             case 1 :
+				lihat_film_dan_kursi ();
                 break;
             case 2 :
                 break;
