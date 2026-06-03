@@ -24,6 +24,9 @@ struct Bioskop{
 Bioskop ruang[3];
 Film tayang[3];
 
+Pemesanan daftarPesanan[100];
+int jumlahPesanan = 0;
+
 void lihat_film_dan_kursi () {
     cout << "\n+==== DAFTAR FILM TAYANG ===+\n";
     for (int i = 0; i < 3; i++) {
@@ -66,8 +69,31 @@ void lihat_film_dan_kursi () {
 }
 
 
+void lihat_data_pesanan() {
+    if (jumlahPesanan == 0) {
+        cout << "Belum ada pesanan.\n";
+        return;
+    }
+    for (int i = 0; i < jumlahPesanan - 1; i++) {
+        for (int j = 0; j < jumlahPesanan - i - 1; j++) {
+            if (daftarPesanan[j].idPesanan >
+                daftarPesanan[j + 1].idPesanan) {
 
- 
+                Pemesanan temp = daftarPesanan[j];
+                daftarPesanan[j] = daftarPesanan[j + 1];
+                daftarPesanan[j + 1] = temp;
+            }
+        }
+    }
+    cout << "\n===== DATA PESANAN =====\n";
+    for (int i = 0; i < jumlahPesanan; i++) {
+        cout << "ID Pesanan : "
+             << daftarPesanan[i].idPesanan << endl;
+        cout << "Nama       : "
+             << daftarPesanan[i].nama << endl;
+        cout << "--------------------------\n";
+    }
+}
 
 int main (){
 	for(int i = 0; i < 3; i++){
@@ -104,6 +130,7 @@ int main (){
             case 2 :
                 break;
             case 3 :
+				lihat_data_pesanan ();
                 break;
             case 4 :
                 break;
