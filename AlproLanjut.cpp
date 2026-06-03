@@ -1,7 +1,7 @@
 #include <iostream>
 #include <fstream>
 #include <string>
-#include <sstream>
+#include <sstream> // Ditambahkan untuk parsing string dari file
 using namespace std;
 
 struct Film {
@@ -35,7 +35,8 @@ int hitungTotalRekursif(int jumlahTiket, int hargaSatuan) {
     return hargaSatuan + hitungTotalRekursif(jumlahTiket - 1, hargaSatuan);
 }
 
-// ==== FUNGSI BARU: Membaca data pesanan saat program dibuka ====
+
+
 void muatDataPesanan() {
     ifstream fileIn("Data/pesanan.txt");
     if (!fileIn.is_open()) {
@@ -140,7 +141,7 @@ void pesanTiketLaluKirim() {
 
             // ==== MENYIMPAN DATA KE TXT (APPEND) ====
             // Mode ios::app (append) akan menambah teks ke baris baru tanpa menghapus isi lama
-            ofstream fileOut("Data/pesanan.txt");
+            ofstream fileOut("Data/pesanan.txt", ios :: app);
             if (fileOut.is_open()) {
                 // Format: indexRuang|baris|kolom|idPesanan|namaPemesan
                 fileOut << index << "|" << r << "|" << c << "|" << counterPesanan << "|" << namaPemesan << "\n";
@@ -206,6 +207,101 @@ void lihat_film_dan_kursi () {
     }
 }
 
+void lihatDataPesanan() {
+    ifstream fileIn("Data/pesanan.txt");
+    
+    // Cek apakah file bisa dibuka (apakah sudah ada pesanan sebelumnya)
+    if (!fileIn.is_open()) {
+        cout << "\n[!] Belum ada data pesanan atau file tidak ditemukan.\n\n";
+        return;
+    }
+
+    string line;
+    cout << "\n+==== DATA RIWAYAT PESANAN ====+\n";
+    
+    bool adaData = false;
+    
+    // Membaca file baris demi baris
+    while (getline(fileIn, line)) {
+        stringstream ss(line);
+        string tempIndex, tempR, tempC, tempId, nama;
+
+        // Memisahkan data berdasarkan delimiter '|'
+        getline(ss, tempIndex, '|');
+        getline(ss, tempR, '|');
+        getline(ss, tempC, '|');
+        getline(ss, tempId, '|');
+        getline(ss, nama);
+
+        // Memastikan baris tidak kosong sebelum diproses
+        if (!tempIndex.empty()) {
+            adaData = true;
+            
+            // Konversi string ke integer untuk index
+            int idx = stoi(tempIndex);
+            int barisKursi = stoi(tempR) + 1; // +1 karena saat disimpan formatnya index (0-4)
+            int kolomKursi = stoi(tempC) + 1; // +1 karena saat disimpan formatnya index (0-5)
+            
+            // Ambil data film berdasarkan index ruang
+            string judulFilm = tayang[idx].judul;
+            string hargaTiket = tayang[idx].harga;
+
+            // Tampilkan ke layar
+            cout << "ID Pesanan : " << tempId << "\n";
+            cout << "Nama       : " << nama << "\n";
+            cout << "Film       : " << judulFilm << " (Ruang " << (idx + 1) << ")\n";
+            cout << "Kursi      : Baris " << barisKursi << ", Kolom " << kolomKursi << "\n";
+            cout << "Harga      : Rp" << hargaTiket << "\n";
+            cout << "-----------------------------------\n";
+        }
+    }
+    
+    if (!adaData) {
+        cout << "Data pesanan masih kosong.\n";
+    }
+    
+    cout << "\n";
+    fileIn.close();
+}
+
+void cariPesanan() {
+    int idCari;
+    cout << "\n+==== CARI DATA PESANAN ====+\n";
+    cout << "Masukkan ID Pesanan yang dicari: ";
+    cin >> idCari;
+
+    bool ditemukan = false;
+
+    // Looping untuk mencari ke seluruh ruang, baris, dan kolom kursi
+    for (int i = 0; i < 3; i++) {
+        for (int baris = 0; baris < 5; baris++) {
+            for (int kolom = 0; kolom < 6; kolom++) {
+                
+                // Jika ID pada kursi cocok dengan ID yang dicari
+                if (ruang[i].kursi[baris][kolom].idPesanan == idCari) {
+                    cout << "\n PESANAN DITEMUKAN! \n";
+                    cout << "-----------------------------------\n";
+                    cout << "ID Pesanan  : " << idCari << "\n";
+                    cout << "Nama Pemesan: " << ruang[i].kursi[baris][kolom].nama << "\n";
+                    cout << "Film        : " << tayang[i].judul << " (Ruang " << (i + 1) << ")\n";
+                    cout << "Posisi Kursi: Baris " << (baris + 1) << ", Kolom " << (kolom + 1) << "\n";
+                    cout << "-----------------------------------\n\n";
+                    
+                    ditemukan = true;
+                    break; // Hentikan loop kolom jika sudah ketemu
+                }
+            }
+            if (ditemukan) break; // Hentikan loop baris
+        }
+        if (ditemukan) break; // Hentikan loop ruang
+    }
+
+    // Jika setelah semua dicek tidak ada yang cocok
+    if (!ditemukan) {
+        cout << "\n Pesanan dengan ID " << idCari << " tidak ditemukan atau belum terdaftar.\n\n";
+    }
+}
+
 int main () {
     // 1. Load data film
     for(int i = 0; i < 3; i++){
@@ -242,13 +338,14 @@ int main () {
             case 1 :
                 lihat_film_dan_kursi ();
                 break;
-                
             case 2 :
                 pesanTiketLaluKirim ();
                 break;
             case 3 :
+				lihatDataPesanan();
                 break;
             case 4 :
+				cariPesanan();
                 break;
             case 5 :
                 break;
