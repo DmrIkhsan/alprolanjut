@@ -10,19 +10,31 @@ struct Film {
 };
 
 struct Pemesanan {
-    int idPesanan;
-    string nama;
-    string kursi;
-    int jumlahTiket;
-    int totalHarga;
-    Film tampil;
+    int idPesanan = 0;
+    string nama = "";
+};
+
+struct Bioskop{
+    Film Tayang;
+    Pemesanan Kursi[5][6];
+    string jam;
 };
 
 void lihat_film_dan_kursi () {
     
 }
 
+Bioskop Ruang[3];
+
 int main (){
+    ifstream file("Data/Film/Data_film.txt")
+    if (!file.is_open()) {
+        cout << "Data film tidak ada: Tanyakan manager kenapa tidak ada filem yang ditanyakan";
+        return 0;
+    }
+
+    file.close();
+
     int pilihan_menu;
     do {
         cout << "+==== PEMESANAN TIKET BIOSKOP ====+\n";
@@ -46,6 +58,7 @@ int main (){
             case 5 :
                 break;
             default :
+                cout <<"Opsi tidak ditemukan"<<endl;
                 break;
         }
     } while (pilihan_menu != 5);
