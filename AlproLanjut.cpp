@@ -1,7 +1,7 @@
 #include <iostream>
 #include <fstream>
 #include <string>
-#include <sstream> // Ditambahkan untuk parsing string dari file
+#include <sstream>
 using namespace std;
 
 struct Film {
@@ -37,7 +37,7 @@ int hitungTotalRekursif(int jumlahTiket, int hargaSatuan) {
 
 // ==== FUNGSI BARU: Membaca data pesanan saat program dibuka ====
 void muatDataPesanan() {
-    ifstream fileIn("pesanan.txt");
+    ifstream fileIn("Data/pesanan.txt");
     if (!fileIn.is_open()) {
         return; // Jika file belum ada, abaikan (berarti belum ada pesanan sama sekali)
     }
