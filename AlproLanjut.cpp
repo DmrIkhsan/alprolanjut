@@ -1,6 +1,7 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <sstream> // Ditambahkan untuk parsing string dari file
 using namespace std;
 
 struct Film {
@@ -15,7 +16,7 @@ struct Pemesanan {
     string nama = "";
 };
 
-struct Bioskop{
+struct Bioskop {
     string idFilmTayang;
     Pemesanan kursi[5][6];
     string jam;
@@ -24,8 +25,145 @@ struct Bioskop{
 Bioskop ruang[3];
 Film tayang[3];
 
-Pemesanan daftarPesanan[100];
-int jumlahPesanan = 0;
+int counterPesanan = 1000; // Untuk menghasilkan ID Pesanan unik otomatis (1001, 1002, dst)
+
+// Fungsi rekursif untuk menghitung total harga (jika beli 'n' tiket)
+int hitungTotalRekursif(int jumlahTiket, int hargaSatuan) {
+    if (jumlahTiket <= 1) {
+        return hargaSatuan;
+    }
+    return hargaSatuan + hitungTotalRekursif(jumlahTiket - 1, hargaSatuan);
+}
+
+// ==== FUNGSI BARU: Membaca data pesanan saat program dibuka ====
+void muatDataPesanan() {
+    ifstream fileIn("pesanan.txt");
+    if (!fileIn.is_open()) {
+        return; // Jika file belum ada, abaikan (berarti belum ada pesanan sama sekali)
+    }
+
+    string line;
+    int maxId = 1000; // Untuk melacak ID pesanan tertinggi
+
+    // Format di file: indexRuang|baris|kolom|idPesanan|namaPemesan
+    while (getline(fileIn, line)) {
+        stringstream ss(line);
+        string tempIndex, tempR, tempC, tempId, nama;
+
+        getline(ss, tempIndex, '|');
+        getline(ss, tempR, '|');
+        getline(ss, tempC, '|');
+        getline(ss, tempId, '|');
+        getline(ss, nama);
+
+        if (!tempIndex.empty()) {
+            int idx = stoi(tempIndex);
+            int r = stoi(tempR);
+            int c = stoi(tempC);
+            int idPes = stoi(tempId);
+
+            // Masukkan kembali ke matriks bioskop
+            ruang[idx].kursi[r][c].nama = nama;
+            ruang[idx].kursi[r][c].idPesanan = idPes;
+
+            // Perbarui maxId jika menemukan ID yang lebih besar
+            if (idPes > maxId) {
+                maxId = idPes;
+            }
+        }
+    }
+    
+    counterPesanan = maxId; // Lanjutkan ID pesanan dari ID terakhir
+    fileIn.close();
+}
+
+void pesanTiketLaluKirim() {
+    cin.ignore(); // WAJIB: Membersihkan sisa 'Enter' dari menu utama (cin >> pilihan_menu)
+    
+    string namaPemesan;
+    cout << "\n+==== FORM PEMESANAN TIKET ====+\n";
+    cout << "Masukkan Nama Anda: ";
+    getline(cin, namaPemesan);
+
+    // 1. Pilih Ruang/Film
+    cout << "\nDaftar Film & Ruang yang Tersedia:\n";
+    for (int i = 0; i < 3; i++) {
+        cout << (i + 1) << ". Ruang " << (i + 1) << " - " << tayang[i].judul << " (Rp" << tayang[i].harga << ")\n";
+    }
+    int pilihanRuang;
+    cout << "Pilih nomor Ruang (1-3): ";
+    cin >> pilihanRuang;
+
+    if (pilihanRuang < 1 || pilihanRuang > 3) {
+        cout << "❌ Pilihan ruang tidak valid!\n\n";
+        return;
+    }
+    int index = pilihanRuang - 1;
+
+    // 2. Tampilkan Denah Kursi agar User Bisa Memilih
+    cout << "\n+==== SILAHKAN PILIH KURSI (RUANG " << pilihanRuang << ") ====+\n";
+    cout << "          [ LAYAR BIOSKOP ]\n\n";
+    for (int baris = 0; baris < 5; baris++) {
+        for (int kolom = 0; kolom < 6; kolom++) {
+            if (ruang[index].kursi[baris][kolom].nama == "") {
+                cout << "[" << (baris + 1) << "." << (kolom + 1) << "] ";
+            } else {
+                cout << "[ X ] "; // X = Sudah dipesan
+            }
+        }
+        cout << "\n";
+    }
+
+    // 3. Input Koordinat Kursi
+    int b, k;
+    cout << "\nMasukkan nomor Baris kursi (1-5): ";
+    cin >> b;
+    cout << "Masukkan nomor Kolom kursi (1-6): ";
+    cin >> k;
+
+    // Validasi batas matriks 5x6
+    if (b >= 1 && b <= 5 && k >= 1 && k <= 6) {
+        int r = b - 1; // Ubah ke index array (0-4)
+        int c = k - 1; // Ubah ke index array (0-5)
+
+        // 4. Cek apakah kursi sudah terisi
+        if (ruang[index].kursi[r][c].nama == "") {
+            counterPesanan++; // Naikkan ID pesanan
+            
+            // Simpan data pemesan ke matriks kursi bioskop
+            ruang[index].kursi[r][c].nama = namaPemesan;
+            ruang[index].kursi[r][c].idPesanan = counterPesanan;
+
+            // Konversi string harga ke int untuk fungsi rekursif
+            int hargaInt = stoi(tayang[index].harga); 
+            int totalBayar = hitungTotalRekursif(1, hargaInt); // Memanggil fungsi rekursif (1 tiket)
+
+            // ==== MENYIMPAN DATA KE TXT (APPEND) ====
+            // Mode ios::app (append) akan menambah teks ke baris baru tanpa menghapus isi lama
+            ofstream fileOut("Data/pesanan.txt");
+            if (fileOut.is_open()) {
+                // Format: indexRuang|baris|kolom|idPesanan|namaPemesan
+                fileOut << index << "|" << r << "|" << c << "|" << counterPesanan << "|" << namaPemesan << "\n";
+                fileOut.close();
+            } else {
+                cout << "Gagal menyimpan ke pesanan.txt!\n";
+            }
+
+            cout << "\n PEMESANAN TIKET BERHASIL! \n";
+            cout << "-----------------------------------\n";
+            cout << "ID Pesanan  : " << counterPesanan << "\n";
+            cout << "Nama        : " << namaPemesan << "\n";
+            cout << "Film        : " << tayang[index].judul << "\n";
+            cout << "Kursi       : Baris " << b << ", Kolom " << k << "\n";
+            cout << "Total Bayar : Rp" << totalBayar << "\n";
+            cout << "-----------------------------------\n\n";
+        } else {
+            cout << " Maaf, kursi nomor [" << b << "." << k << "] sudah di-booking orang lain!\n\n";
+        }
+    } else {
+        cout << " Posisi kursi tidak tersedia di bioskop ini!\n\n";
+    }
+}
 
 void lihat_film_dan_kursi () {
     cout << "\n+==== DAFTAR FILM TAYANG ===+\n";
@@ -68,69 +206,47 @@ void lihat_film_dan_kursi () {
     }
 }
 
-
-void lihat_data_pesanan() {
-    if (jumlahPesanan == 0) {
-        cout << "Belum ada pesanan.\n";
-        return;
-    }
-    for (int i = 0; i < jumlahPesanan - 1; i++) {
-        for (int j = 0; j < jumlahPesanan - i - 1; j++) {
-            if (daftarPesanan[j].idPesanan >
-                daftarPesanan[j + 1].idPesanan) {
-
-                Pemesanan temp = daftarPesanan[j];
-                daftarPesanan[j] = daftarPesanan[j + 1];
-                daftarPesanan[j + 1] = temp;
-            }
+int main () {
+    // 1. Load data film
+    for(int i = 0; i < 3; i++){
+        string namaFile = "Data/Film/Data_film"+to_string(i)+".txt";
+        ifstream file(namaFile);
+        if (!file.is_open()) {
+            cout << "Data film tidak ada: Tanyakan manager kenapa tidak ada filem yang ditanyakan\n";
+            return 0; // Hentikan program jika data film tidak lengkap
         }
-    }
-    cout << "\n===== DATA PESANAN =====\n";
-    for (int i = 0; i < jumlahPesanan; i++) {
-        cout << "ID Pesanan : "
-             << daftarPesanan[i].idPesanan << endl;
-        cout << "Nama       : "
-             << daftarPesanan[i].nama << endl;
-        cout << "--------------------------\n";
-    }
-}
+        getline(file, tayang[i].idFilm);
+        getline(file, tayang[i].judul);
+        getline(file, tayang[i].genre);
+        getline(file, tayang[i].harga);
+        ruang[i].idFilmTayang = tayang[i].idFilm;
 
-int main (){
-	for(int i = 0; i < 3; i++){
-		string namaFile = "Data/Film/Data_film"+to_string(i)+".txt";
-		ifstream file(namaFile);
-		if (!file.is_open()) {
-			cout << "Data film tidak ada: Tanyakan manager kenapa tidak ada filem yang ditanyakan";
-			return 0;
-		}
-		getline(file, tayang[i].idFilm);
-		getline(file, tayang[i].judul);
-		getline(file, tayang[i].genre);
-		getline(file, tayang[i].harga);
-		ruang[i].idFilmTayang = tayang[i].idFilm;
-
-		file.close();
-	}
-	
+        file.close();
+    }
+    
+    // 2. Load riwayat pemesanan agar kursi kembali terisi
+    muatDataPesanan();
+    
     int pilihan_menu;
     do {
         cout << "+==== PEMESANAN TIKET BIOSKOP ====+\n";
-        cout << "1. Lihat Film dan Kursi\n"; //menampilkan daftar film dan dena kursi bioskop (array)
-        cout << "2. Pesan Tiket+\n"; //input nama, pilih film & kursi, total harga tiket (rekursif), dll
-        cout << "3. Lihat Data Pesanan\n"; //hanya admin. menampilkan data (sorting)
-        cout << "4. Cari Pesanan\n"; //hanya admin. (searching)
+        cout << "1. Lihat Film dan Kursi\n"; 
+        cout << "2. Pesan Tiket\n"; 
+        cout << "3. Lihat Data Pesanan\n"; 
+        cout << "4. Cari Pesanan\n"; 
         cout << "5. Keluar\n";
         cout << "Pilih menu (1-5) : ";
         cin >> pilihan_menu;
 
         switch (pilihan_menu) {
             case 1 :
-				lihat_film_dan_kursi ();
+                lihat_film_dan_kursi ();
                 break;
+                
             case 2 :
+                pesanTiketLaluKirim ();
                 break;
             case 3 :
-				lihat_data_pesanan ();
                 break;
             case 4 :
                 break;
