@@ -302,6 +302,40 @@ void cariPesanan() {
     }
 }
 
+void urutkanFilmBerdasarkanHarga() {
+    // Membuat array of pointer yang menunjuk ke memori array tayang
+    Film* ptrTayang[3];
+    for (int i = 0; i < 3; i++) {
+        ptrTayang[i] = &tayang[i];
+    }
+
+    // Menggunakan Bubble Sort untuk mengurutkan pointer, BUKAN data aslinya
+    // Sehingga tidak mengacaukan kecocokan index antara array ruang[] dan tayang[]
+    for (int i = 0; i < 3 - 1; i++) {
+        for (int j = 0; j < 3 - i - 1; j++) {
+            int harga1 = stoi(ptrTayang[j]->harga);
+            int harga2 = stoi(ptrTayang[j + 1]->harga);
+
+            if (harga1 > harga2) {
+                // Menukar pointer jika harga pertama lebih besar
+                Film* temp = ptrTayang[j];
+                ptrTayang[j] = ptrTayang[j + 1];
+                ptrTayang[j + 1] = temp;
+            }
+        }
+    }
+
+    // Menampilkan data yang sudah diurutkan (Termurah ke Termahal)
+    cout << "\n+==== DAFTAR FILM TERURUT (BERDASARKAN HARGA) ====+\n";
+    for (int i = 0; i < 3; i++) {
+        // Menggunakan operator -> untuk mengakses member melalui pointer
+        cout << "Judul : " << ptrTayang[i]->judul << "\n";
+        cout << "Genre : " << ptrTayang[i]->genre << "\n";
+        cout << "Harga : Rp" << ptrTayang[i]->harga << "\n";
+        cout << "---------------------------------------------------\n";
+    }
+}
+	
 int main () {
     // 1. Load data film
     for(int i = 0; i < 3; i++){
@@ -329,9 +363,10 @@ int main () {
         cout << "1. Lihat Film dan Kursi\n"; 
         cout << "2. Pesan Tiket\n"; 
         cout << "3. Lihat Data Pesanan\n"; 
-        cout << "4. Cari Pesanan\n"; 
-        cout << "5. Keluar\n";
-        cout << "Pilih menu (1-5) : ";
+        cout << "4. Cari Pesanan\n";
+        cout << "5. Cari Film Paling Murah\n"; 
+        cout << "6. Keluar\n";
+        cout << "Pilih menu (1-6) : ";
         cin >> pilihan_menu;
 
         switch (pilihan_menu) {
@@ -348,10 +383,13 @@ int main () {
 				cariPesanan();
                 break;
             case 5 :
+				urutkanFilmBerdasarkanHarga();
+                break;
+            case 6 :
                 break;
             default :
                 cout <<"Opsi tidak ditemukan"<<endl;
                 break;
         }
-    } while (pilihan_menu != 5);
+    } while (pilihan_menu != 6);
 }
