@@ -2,6 +2,22 @@
 #include <fstream>
 using namespace std;
 
+struct Film {
+    int idFilm;
+    string judul;
+    string genre;
+    int harga;
+};
+
+struct Pemesanan {
+    int idPesanan;
+    string nama;
+    string kursi;
+    int jumlahTiket;
+    int totalHarga;
+    Film tampil;
+};
+
 void lihat_film_dan_kursi () {
     
 }
